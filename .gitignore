@@ -15,3 +15,4 @@ bin/
 # Ignore build output directories
 bin/
 obj/
+/10000_users.xlsx

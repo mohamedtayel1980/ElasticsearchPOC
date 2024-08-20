@@ -52,45 +52,65 @@ class Program
 
         // Name to search for using fuzzy search
         string searchNameAr = @"حازم سيد عبدالعاطى موسى";
-        string searchName = @"Hazem Sayed Abd El Moaty Moussa";
+        string searchName = @"Hazem Mohamed Karem Awad Hassan";
 
         // Perform a fuzzy search and generate the response JSON
-        var jsonResponse = PerformFuzzySearchWithBataches(client, names, searchName);
+        var jsonResponse = PerformFuzzySearchEnglish(client, names, searchName);
         var jsonResponse1 = PerformFuzzyArabic(client, names, searchNameAr);
 
         // Output the JSON response
+        Console.WriteLine("-------------------------English search  -----------------------------------");
+
         Console.WriteLine(jsonResponse);
+        Console.WriteLine("------------------------------Arabic search------------------------------");
         Console.WriteLine(jsonResponse1);
     }
-    static string PerformFuzzySearchWithBataches(ElasticClient client, List<(string FullNameAr, string FullNameEn)> names, string searchName)
+    static string PerformFuzzySearchEnglish(ElasticClient client, List<(string FullNameAr, string FullNameEn)> names, string searchName)
     {
         var allResults = new List<SearchResult>();
 
         // Batch size can be adjusted based on your maxClauseCount setting
         int batchSize = 1000;
+        var nameParts = searchName.Split(' '); // Split the name into components
 
         foreach (var batch in Batch(names, batchSize))
         {
+            //var searchResponse = client.Search<Person>(s => s
+            //    .Query(q => q
+            //        .Bool(b => b
+            //            .Should(batch.Select(name => (Func<QueryContainerDescriptor<Person>, QueryContainer>)(f => f
+            //                .Fuzzy(fz => fz
+            //                    .Field(p => p.FullNameEn)
+            //                    .Value(searchName)
+            //                    .Fuzziness(Fuzziness.Auto)
+
+            //                )
+            //            )).ToArray())
+            //        )
+            //    )
+            //);
             var searchResponse = client.Search<Person>(s => s
-                .Query(q => q
-                    .Bool(b => b
+        .Query(q => q
+            .Bool(b => b
+                .Must(nameParts.Select(part => (Func<QueryContainerDescriptor<Person>, QueryContainer>)(mp => mp
+                    .Bool(batchBool => batchBool
                         .Should(batch.Select(name => (Func<QueryContainerDescriptor<Person>, QueryContainer>)(f => f
                             .Fuzzy(fz => fz
-                                .Field(p => p.FullName)
-                                .Value(searchName)
-                                .Fuzziness(Fuzziness.Auto)
-
+                                .Field(p => p.FullNameEn)
+                                .Value(part)  // Search using each part of the name
+                                .Fuzziness(Fuzziness.EditDistance(2))  // Adjust fuzziness if needed
                             )
                         )).ToArray())
                     )
-                )
-            );
-
+                )).ToArray())
+            )
+        )
+    );
             if (searchResponse.IsValid)
             {
                 foreach (var hit in searchResponse.Hits)
                 {
-                    var exactMatch = hit.Source.FullName == searchName;
+                    var exactMatch = hit.Source.FullNameEn == searchName;
                     var matchingScore = hit.Score ?? 0;
 
                     allResults.Add(new SearchResult
@@ -110,31 +130,14 @@ class Program
 
 
 
+        // Serialize the results to JSON if needed
         return JsonConvert.SerializeObject(allResults, Newtonsoft.Json.Formatting.Indented);
     }
 
     static string PerformFuzzyArabic(ElasticClient client, List<(string FullNameAr, string FullNameEn)> names, string searchName)
     {
 
-        //       var searchResponse = client.Search<Person>(s => s
-        //    .Index("my_test_index")  // Specify your index name
-        //    .Size(100)               // Set the size to 100 to retrieve the first 100 results
-        //    .Query(q => q
-        //        .Bool(b => b
-        //            .Should(names.Take(100).Select(name =>
-        //                (Func<QueryContainerDescriptor<Person>, QueryContainer>)(f => f
-        //                    .Fuzzy(fz => fz
-        //                        .Field(p => p.FullNameEn)  // Ensure you are using the correct field
-        //                         .Query(searchName)
-        //                        .Analyzer("my_arabic_analyzer")
-        //                    //.Value(searchName.Substring(0,3))
-        //                    //.Fuzziness(Fuzziness.Auto)
-        //                    )
-        //                )
-        //            ).ToArray())
-        //        )
-        //    )
-        //);
+        
         var searchResponse = client.Search<Person>(s => s
            .Index("my_test_index")
                .Query(q => q
