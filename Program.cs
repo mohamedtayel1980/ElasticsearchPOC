@@ -75,20 +75,7 @@ class Program
 
         foreach (var batch in Batch(names, batchSize))
         {
-            //var searchResponse = client.Search<Person>(s => s
-            //    .Query(q => q
-            //        .Bool(b => b
-            //            .Should(batch.Select(name => (Func<QueryContainerDescriptor<Person>, QueryContainer>)(f => f
-            //                .Fuzzy(fz => fz
-            //                    .Field(p => p.FullNameEn)
-            //                    .Value(searchName)
-            //                    .Fuzziness(Fuzziness.Auto)
-
-            //                )
-            //            )).ToArray())
-            //        )
-            //    )
-            //);
+           
             var searchResponse = client.Search<Person>(s => s
         .Query(q => q
             .Bool(b => b
