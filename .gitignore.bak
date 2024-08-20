@@ -1,0 +1,13 @@
+App.config
+# Ignore Visual Studio specific files and directories
+.vs/
+*.suo
+
+# Ignore build output directories
+obj/
+bin/
+
+# Ignore user-specific files
+*.user
+*.userosscache
+*.sln.docstates

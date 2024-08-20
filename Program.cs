@@ -1,13 +1,18 @@
 ﻿using Elasticsearch.Net;
 using Nest;
+using System.Configuration;
 
 class Program
 {
     static void Main(string[] args)
     {
+        // Read from App.config
+        string elasticUri = ConfigurationManager.AppSettings["ElasticsearchUri"];
+        string username = ConfigurationManager.AppSettings["ElasticsearchUsername"];
+        string password = ConfigurationManager.AppSettings["ElasticsearchPassword"];
         var settings = new ConnectionSettings(new Uri("https://localhost:9200"))
                        .DefaultIndex("my_index")
-                       .BasicAuthentication("elastic", "RU=GYmQ3Dn8u*IUuu-BJ")
+                       .BasicAuthentication("elastic", "your password ")
                        .ServerCertificateValidationCallback(CertificateValidations.AllowAll);
 
         var client = new ElasticClient(settings);
